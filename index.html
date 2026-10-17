@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Order food and groceries</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Sora:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F6F6FA;--ink:#1A1A2E;--mute:#666680;--line:#E0E0EA;--card:#fff;--brand:#B3174F;--ok:#1E8E5A;--bad:#B3261E;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.45 'DM Sans',system-ui,sans-serif}
+h1,h2,h3,.brand{font-family:Sora,'DM Sans',sans-serif;margin:0;letter-spacing:-.02em}
+[hidden]{display:none!important}
+button,input,select,textarea{font:inherit;color:inherit}
+input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
+label{display:block;font-weight:500;font-size:13px;margin:10px 0 4px}
+button{cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 14px;font-weight:500}
+button.p{background:var(--brand);border-color:var(--brand);color:#fff}
+button.d{color:var(--bad)}
+button:disabled{opacity:.5;cursor:not-allowed}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.mute{color:var(--mute)}
+.wrap{max-width:980px;margin:0 auto;padding:16px}
+.narrow{max-width:440px;margin:8vh auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.msg{color:var(--bad);min-height:1.3em;margin:10px 0 0}
+header.top{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header.top .wrap{display:flex;align-items:center;gap:12px;padding:10px 16px}
+.brand{font-size:20px;font-weight:800;color:var(--brand);margin-right:auto}
+.tabs{display:flex;gap:4px}
+.tabs button{border:0;background:none;color:var(--mute);border-radius:8px}
+.tabs button.on{background:var(--bg);color:var(--ink)}
+#cart-btn b{background:var(--brand);color:#fff;border-radius:99px;padding:1px 8px;margin-left:6px;font-size:13px}
+.chips{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap}
+.chips button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.shops{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.shop{display:flex;gap:12px;text-align:left;padding:12px;border-radius:14px;background:#fff;align-items:flex-start;width:100%}
+.shop.closed{opacity:.6}
+.logo{width:64px;height:64px;border-radius:12px;background:var(--ink);color:#fff;display:grid;place-items:center;font:800 24px Sora;flex:none;object-fit:cover}
+.badge{font-size:12px;border-radius:99px;padding:2px 9px;background:var(--bg)}
+.badge.open{background:#DDF3E8;color:var(--ok)}
+.prod{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+.prod img{width:84px;height:84px;border-radius:12px;object-fit:cover;flex:none}
+.prod .i{flex:1}
+.veg{display:inline-block;width:12px;height:12px;border:2px solid var(--ok);border-radius:2px;margin-right:6px}
+.veg.nv{border-color:var(--bad)}
+.step{display:inline-flex;align-items:center;border:1px solid var(--brand);border-radius:10px;overflow:hidden}
+.step button{border:0;border-radius:0;background:none;color:var(--brand);padding:6px 12px;font-weight:700}
+.step span{min-width:26px;text-align:center;font-weight:700}
+.empty{padding:28px;text-align:center;color:var(--mute);border:2px dashed var(--line);border-radius:12px}
+.ord{width:100%;text-align:left;margin-bottom:10px;padding:14px;border-radius:14px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.tl{list-style:none;padding:0;margin:14px 0}
+.tl li{padding:5px 0 5px 28px;position:relative;color:var(--mute)}
+.tl li::before{content:"";position:absolute;left:4px;top:9px;width:12px;height:12px;border-radius:50%;border:2px solid var(--line);background:#fff}
+.tl li.done{color:var(--ink)}
+.tl li.done::before{background:var(--ok);border-color:var(--ok)}
+.tl li.now{font-weight:700}
+.tl li.now::before{box-shadow:0 0 0 4px #DDF3E8}
+.tot{display:flex;justify-content:space-between;padding:3px 0}
+.tot.g{font-weight:700;font-size:17px;border-top:1px solid var(--line);margin-top:6px;padding-top:8px}
+dialog{border:0;border-radius:16px;padding:20px;width:min(520px,94vw);max-height:92vh}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.stars button{border:0;background:none;font-size:26px;padding:2px;color:#ccc}
+.stars button.on{color:#F5A400}
+#toast{position:fixed;inset:auto auto 18px 50%;margin:0;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border:0;border-radius:10px;max-width:90vw}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<section id="v-auth" class="wrap narrow" hidden>
+  <h1>Hungry? Order in minutes.</h1>
+  <p class="mute">Meals and groceries from shops near you.</p>
+  <div class="card">
+    <div class="tabs" id="auth-tabs"><button class="on" data-a="login">Log in</button><button data-a="signup">Create account</button></div>
+    <form id="f-login">
+      <label for="l-email">Email</label><input id="l-email" name="email" type="email" required autocomplete="email">
+      <label for="l-pass">Password</label><input id="l-pass" name="password" type="password" required autocomplete="current-password">
+      <p><button class="p" type="submit">Log in</button></p>
+    </form>
+    <form id="f-signup" hidden>
+      <label for="s-name">Your name</label><input id="s-name" name="name" required>
+      <label for="s-phone">Phone (for the delivery rider)</label><input id="s-phone" name="phone" type="tel" required>
+      <label for="s-email">Email</label><input id="s-email" name="email" type="email" required autocomplete="email">
+      <label for="s-pass">Password (min 6 characters)</label><input id="s-pass" name="password" type="password" minlength="6" required autocomplete="new-password">
+      <p><button class="p" type="submit">Create account</button></p>
+    </form>
+    <p class="msg" id="auth-msg" role="alert"></p>
+  </div>
+</section>
+
+<section id="v-app" hidden>
+  <header class="top"><div class="wrap">
+    <span class="brand">ನಿಮ್ಮ ಮನೆಯವರೆಗೆ</span>
+    <nav class="tabs" id="tabs"><button class="on" data-t="shops">Shops</button><button data-t="orders">My orders</button></nav>
+    <button id="cart-btn">Cart<b id="cart-n">0</b></button>
+    <button id="out">Log out</button>
+  </div></header>
+  <main class="wrap">
+    <div id="t-shops">
+      <div id="shops-view">
+        <div class="row"><input id="q" type="search" placeholder="Search shops" aria-label="Search shops" style="flex:1;min-width:200px"><button id="near">Sort by distance</button></div>
+        <div class="chips" id="chips"><button class="on" data-f="all">All</button><button data-f="food">Food</button><button data-f="grocery">Grocery</button></div>
+        <div class="shops" id="shops"></div>
+      </div>
+      <div id="shop-view" hidden></div>
+    </div>
+    <div id="t-orders" hidden><div id="orders"></div></div>
+  </main>
+</section>
+
+<dialog id="d-cart"><div id="cart-body"></div></dialog>
+<dialog id="d-ord"><div id="ord-body"></div></dialog>
+<div id="toast" popover="manual" role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>
+<script>
+// ======== CONFIG (same values as shop.html) ========
+const SUPABASE_URL = 'https://dplaucmoydabawybbjum.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_56pYKQPr8pGh7fRH4o31fw_ydzP4HFy';
+const DELIVERY_FEE = 30; // display only; the server sets the real fee
+// ===================================================
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = id => document.getElementById(id);
+let me, shops = [], addrs = [], orders = [], here = null, cur = null, chan, filter = 'all', sortNear = false, cart = loadCart();
+
+function h(tag, a = {}, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(a)) {
+    if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) e.setAttribute(k, v);
+  }
+  kids.flat().forEach(c => { if (c === false || c == null) return; e.append(c instanceof Node ? c : document.createTextNode(c)); });
+  return e;
+}
+const money = n => '₹' + (+n).toFixed(2).replace(/\.00$/, '');
+let tt; function toast(m) { const t = $('toast'); t.textContent = m; try { t.hidePopover(); } catch (e) {} try { t.showPopover(); } catch (e) {} clearTimeout(tt); tt = setTimeout(() => { try { t.hidePopover(); } catch (e) {} }, 3500); }
+const show = id => ['v-auth', 'v-app'].forEach(v => $(v).hidden = v !== id);
+function loadCart() { try { return JSON.parse(localStorage.getItem('cart')) || { shop: null, items: {} }; } catch (e) { return { shop: null, items: {} }; } }
+function saveCart() { try { localStorage.setItem('cart', JSON.stringify(cart)); } catch (e) {} $('cart-n').textContent = Object.values(cart.items).reduce((a, i) => a + i.qty, 0); }
+function km(a, b, c, d) { const r = x => x * Math.PI / 180, t = Math.sin(r(c - a) / 2) ** 2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(r(d - b) / 2) ** 2; return 12742 * Math.asin(Math.sqrt(t)); }
+const dist = s => here && s.lat != null && s.lng != null ? km(here.lat, here.lng, s.lat, s.lng) : null;
+const LABEL = { placed: 'Order placed', accepted: 'Shop accepted', preparing: 'Being prepared', ready: 'Ready for pickup', picked_up: 'On the way', delivered: 'Delivered', cancelled: 'Cancelled', rejected: 'Shop could not take this order' };
+
+// ---------- auth ----------
+$('auth-tabs').onclick = e => {
+  const a = e.target.dataset.a; if (!a) return;
+  [...$('auth-tabs').children].forEach(b => b.classList.toggle('on', b === e.target));
+  $('f-login').hidden = a !== 'login'; $('f-signup').hidden = a !== 'signup'; $('auth-msg').textContent = '';
+};
+$('f-login').onsubmit = async e => {
+  e.preventDefault(); const f = new FormData(e.target);
+  const { data, error } = await db.auth.signInWithPassword({ email: f.get('email'), password: f.get('password') });
+  if (error) return $('auth-msg').textContent = error.message; boot(data.user);
+};
+$('f-signup').onsubmit = async e => {
+  e.preventDefault(); const f = new FormData(e.target);
+  const { data, error } = await db.auth.signUp({ email: f.get('email'), password: f.get('password'), options: { data: { role: 'customer', name: f.get('name'), phone: f.get('phone') } } });
+  if (error) return $('auth-msg').textContent = error.message;
+  if (!data.session) return $('auth-msg').textContent = 'Check your email to confirm your account, then log in.'; boot(data.user);
+};
+$('out').onclick = async () => { if (chan) db.removeChannel(chan); await db.auth.signOut(); show('v-auth'); };
+
+async function boot(user) {
+  const { data: p } = await db.from('profiles').select('role').eq('id', user.id).maybeSingle();
+  if (!p || p.role !== 'customer') {
+    await db.auth.signOut(); show('v-auth');
+    return $('auth-msg').textContent = 'This site is for customers. Shop owners and riders have their own sites.';
+  }
+  me = user; show('v-app'); saveCart();
+  await Promise.all([loadShops(), loadAddrs(), loadOrders()]); subscribe();
+}
+$('tabs').onclick = e => {
+  const t = e.target.dataset.t; if (!t) return;
+  [...$('tabs').children].forEach(b => b.classList.toggle('on', b === e.target));
+  $('t-shops').hidden = t !== 'shops'; $('t-orders').hidden = t !== 'orders';
+};
+
+// ---------- shops ----------
+async function loadShops() {
+  const { data, error } = await db.from('shops').select('*').order('name');
+  if (error) return toast(error.message); shops = data; renderShops();
+}
+$('q').oninput = () => renderShops();
+$('chips').onclick = e => { const f = e.target.dataset.f; if (!f) return; filter = f; [...$('chips').children].forEach(b => b.classList.toggle('on', b === e.target)); renderShops(); };
+$('near').onclick = () => navigator.geolocation.getCurrentPosition(
+  p => { here = { lat: p.coords.latitude, lng: p.coords.longitude }; sortNear = true; renderShops(); },
+  () => toast('Location is blocked. Allow it in your browser to sort by distance.'));
+function renderShops() {
+  const q = $('q').value.toLowerCase();
+  const list = shops.filter(s => (filter === 'all' || s.type === filter) && (s.name + ' ' + (s.description || '')).toLowerCase().includes(q));
+  list.sort((a, b) => (b.is_open - a.is_open) || (sortNear ? (dist(a) ?? 1e9) - (dist(b) ?? 1e9) : 0));
+  $('shops').replaceChildren(...(list.length ? list.map(s => {
+    const d = dist(s);
+    return h('button', { class: 'shop' + (s.is_open ? '' : ' closed'), onclick: () => openShop(s) },
+      s.logo_url ? h('img', { class: 'logo', src: s.logo_url, alt: '' }) : h('div', { class: 'logo' }, s.name[0].toUpperCase()),
+      h('div', {}, h('b', {}, s.name), ' ', h('span', { class: 'badge' + (s.is_open ? ' open' : '') }, s.is_open ? 'Open' : 'Closed'),
+        h('div', { class: 'mute' }, s.description || (s.type === 'food' ? 'Restaurant' : 'Grocery')),
+        h('div', { class: 'mute' }, [d != null ? d.toFixed(1) + ' km away' : null, s.min_order > 0 ? 'Min order ' + money(s.min_order) : 'No minimum'].filter(Boolean).join(', '))));
+  }) : [h('p', { class: 'empty' }, 'No shops match. Try another search, or check back when shops open.')]));
+}
+async function openShop(s) {
+  cur = s; $('shops-view').hidden = true; $('shop-view').hidden = false;
+  $('shop-view').replaceChildren(h('p', { class: 'mute' }, 'Loading menu...'));
+  const [c, p] = await Promise.all([db.from('categories').select('*').eq('shop_id', s.id).order('sort_order').order('name'), db.from('products').select('*').eq('shop_id', s.id).order('created_at')]);
+  if (c.error || p.error) return toast((c.error || p.error).message);
+  cur.cats = c.data; cur.prods = p.data; renderShop();
+}
+function renderShop() {
+  const s = cur, d = dist(s), far = d != null && d > s.delivery_radius_km;
+  const groups = [...s.cats.map(c => [c.name, s.prods.filter(p => p.category_id === c.id)]), ['More', s.prods.filter(p => !s.cats.some(c => c.id === p.category_id))]].filter(g => g[1].length);
+  const canOrder = s.is_open && !far;
+  $('shop-view').replaceChildren(
+    h('button', { onclick: () => { cur = null; $('shop-view').hidden = true; $('shops-view').hidden = false; } }, 'Back to shops'),
+    h('h2', { style: 'margin:14px 0 4px' }, s.name), h('p', { class: 'mute', style: 'margin:0 0 8px' }, s.address),
+    !s.is_open && h('p', { class: 'badge' }, 'This shop is closed right now. You can browse but not order.'),
+    far && h('p', { class: 'badge' }, `You are ${d.toFixed(1)} km away. This shop delivers within ${s.delivery_radius_km} km.`),
+    ...(groups.length ? groups.map(([n, items]) => h('section', {}, h('h3', { style: 'margin:18px 0 0' }, n), items.map(p => prodCard(p, canOrder)))) : [h('p', { class: 'empty' }, 'This shop has not added items yet.')]));
+}
+function prodCard(p, canOrder) {
+  const q = cart.items[p.id]?.qty || 0, out = p.stock === 0;
+  return h('div', { class: 'prod' },
+    p.image_url && h('img', { src: p.image_url, alt: '', loading: 'lazy' }),
+    h('div', { class: 'i' }, h('span', { class: 'veg' + (p.is_veg ? '' : ' nv') }), h('b', {}, p.name),
+      p.description && h('div', { class: 'mute' }, p.description), h('div', {}, money(p.price), p.stock != null && p.stock > 0 && p.stock <= 5 && h('span', { class: 'mute' }, '  Only ' + p.stock + ' left'))),
+    out ? h('span', { class: 'mute' }, 'Sold out') : !canOrder ? null :
+      q ? h('div', { class: 'step' }, h('button', { onclick: () => setQty(p, -1), 'aria-label': 'Remove one' }, '−'), h('span', {}, q), h('button', { onclick: () => setQty(p, 1), 'aria-label': 'Add one' }, '+'))
+        : h('button', { class: 'p', onclick: () => setQty(p, 1) }, 'Add'));
+}
+function setQty(p, d) {
+  const s = cur || shops.find(x => x.id === p.shop_id);
+  if (d > 0 && cart.shop && cart.shop.id !== s.id && Object.keys(cart.items).length) {
+    if (!confirm(`Your cart has items from ${cart.shop.name}. Clear it and start a new cart here?`)) return; cart = { shop: null, items: {} };
+  }
+  cart.shop = { id: s.id, name: s.name };
+  const it = cart.items[p.id] || { name: p.name, price: p.price, qty: 0 };
+  it.qty = Math.max(0, Math.min(it.qty + d, p.stock ?? 50, 50)); it.price = p.price; it.name = p.name;
+  if (it.qty === 0) delete cart.items[p.id]; else cart.items[p.id] = it;
+  if (!Object.keys(cart.items).length) cart.shop = null;
+  saveCart(); if (cur) renderShop(); if ($('d-cart').open) renderCart();
+}
+
+// ---------- cart + checkout ----------
+async function loadAddrs() { const { data } = await db.from('addresses').select('*').order('created_at', { ascending: false }); addrs = data || []; }
+$('cart-btn').onclick = () => { renderCart(); $('d-cart').showModal(); };
+let addingAddr = false, selAddr = '';
+function renderCart() {
+  const box = $('cart-body'), ids = Object.keys(cart.items), sub = ids.reduce((a, k) => a + cart.items[k].price * cart.items[k].qty, 0);
+  const shop = cart.shop && shops.find(s => s.id === cart.shop.id);
+  if (!ids.length) return box.replaceChildren(h('h2', {}, 'Your cart'), h('p', { class: 'empty' }, 'Your cart is empty. Pick a shop and add something tasty.'), h('button', { onclick: () => $('d-cart').close() }, 'Close'));
+  if (!selAddr || !addrs.some(a => a.id === selAddr)) selAddr = addrs[0]?.id || '';
+  const short = shop && sub < shop.min_order, msg = h('p', { class: 'msg', role: 'alert' });
+  const place = h('button', { class: 'p', disabled: !selAddr || short || !shop?.is_open, onclick: async () => {
+    place.disabled = true; msg.textContent = '';
+    const { data, error } = await db.rpc('place_order', { p_shop_id: cart.shop.id, p_items: ids.map(id => ({ product_id: id, qty: cart.items[id].qty })), p_address_id: selAddr, p_payment_method: 'cod', p_notes: $('c-note').value.trim() || null });
+    if (error) { msg.textContent = error.message; place.disabled = false; return; }
+    cart = { shop: null, items: {} }; saveCart(); $('d-cart').close(); toast('Order placed');
+    [...$('tabs').children][1].click(); await loadOrders(); showOrder(data);
+  } }, 'Place order (pay cash on delivery)');
+  box.replaceChildren(
+    h('h2', {}, 'Your cart'), h('p', { class: 'mute' }, 'From ' + cart.shop.name),
+    ids.map(id => { const i = cart.items[id]; return h('div', { class: 'row', style: 'justify-content:space-between;padding:6px 0' }, h('span', {}, i.name),
+      h('span', { class: 'row' }, h('div', { class: 'step' }, h('button', { onclick: () => setQty({ id, shop_id: cart.shop.id, price: i.price, name: i.name }, -1) }, '−'), h('span', {}, i.qty), h('button', { onclick: () => setQty({ id, shop_id: cart.shop.id, price: i.price, name: i.name }, 1) }, '+')), h('b', {}, money(i.price * i.qty)))); }),
+    h('div', { class: 'tot' }, h('span', {}, 'Items'), h('span', {}, money(sub))),
+    h('div', { class: 'tot' }, h('span', {}, 'Delivery'), h('span', {}, money(DELIVERY_FEE))),
+    h('div', { class: 'tot g' }, h('span', {}, 'Total'), h('span', {}, money(sub + DELIVERY_FEE))),
+    short && h('p', { class: 'badge' }, `Minimum order for this shop is ${money(shop.min_order)}. Add ${money(shop.min_order - sub)} more.`),
+    h('label', { for: 'c-addr' }, 'Deliver to'),
+    addrs.length ? h('select', { id: 'c-addr', onchange: e => { selAddr = e.target.value; } }, addrs.map(a => h('option', { value: a.id, ...(a.id === selAddr ? { selected: true } : {}) }, a.label + ': ' + a.address.slice(0, 50)))) : h('p', { class: 'mute' }, 'Add a delivery address to continue.'),
+    h('p', {}, h('button', { onclick: () => { addingAddr = !addingAddr; renderCart(); } }, addingAddr ? 'Cancel' : 'Add new address')),
+    addingAddr && addrForm(),
+    h('label', { for: 'c-note' }, 'Note for the shop (optional)'), h('textarea', { id: 'c-note', rows: 2, maxlength: 200 }),
+    msg, h('div', { class: 'row', style: 'margin-top:12px;justify-content:flex-end' }, h('button', { onclick: () => $('d-cart').close() }, 'Keep shopping'), place));
+}
+function addrForm() {
+  const f = h('form', { class: 'card', style: 'margin-bottom:8px' },
+    h('label', { for: 'a-l' }, 'Label'), h('input', { id: 'a-l', value: 'Home', required: true, maxlength: 30 }),
+    h('label', { for: 'a-a' }, 'Full address with landmark and pincode'), h('textarea', { id: 'a-a', rows: 2, required: true }),
+    h('p', {}, h('button', { type: 'button', onclick: () => navigator.geolocation.getCurrentPosition(p => { f.dataset.lat = p.coords.latitude; f.dataset.lng = p.coords.longitude; toast('Location pinned'); }, () => toast('Location blocked. The address text will still work.')) }, 'Pin my current location')),
+    h('button', { class: 'p', type: 'submit' }, 'Save address'));
+  f.onsubmit = async e => {
+    e.preventDefault();
+    const { data, error } = await db.from('addresses').insert({ user_id: me.id, label: $('a-l').value.trim(), address: $('a-a').value.trim(), lat: f.dataset.lat ? +f.dataset.lat : null, lng: f.dataset.lng ? +f.dataset.lng : null }).select().single();
+    if (error) return toast(error.message); addrs.unshift(data); selAddr = data.id; addingAddr = false; renderCart();
+  };
+  return f;
+}
+
+// ---------- orders ----------
+async function loadOrders() {
+  const { data, error } = await db.from('orders').select('*, order_items(*), shops(name)').order('created_at', { ascending: false }).limit(50);
+  if (error) return toast(error.message); orders = data; renderOrders();
+  if ($('d-ord').open && $('d-ord').dataset.id) showOrder($('d-ord').dataset.id, true);
+}
+function subscribe() {
+  if (chan) db.removeChannel(chan);
+  chan = db.channel('my-orders').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders', filter: `customer_id=eq.${me.id}` },
+    p => { toast(LABEL[p.new.status] || 'Order updated'); loadOrders(); }).subscribe();
+}
+function renderOrders() {
+  $('orders').replaceChildren(...(orders.length ? orders.map(o => h('button', { class: 'ord', onclick: () => showOrder(o.id) },
+    h('span', {}, h('b', {}, o.shops?.name || 'Shop'), h('div', { class: 'mute' }, new Date(o.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) + ', ' + o.order_items.reduce((a, i) => a + i.qty, 0) + ' items')),
+    h('span', {}, h('b', {}, money(o.total)), h('div', { class: ['delivered'].includes(o.status) ? 'badge open' : 'badge' }, LABEL[o.status])))) : [h('p', { class: 'empty' }, 'No orders yet. Your orders and their live status will show here.')]));
+}
+async function showOrder(id, refresh) {
+  const o = orders.find(x => x.id === id); if (!o) return;
+  const d = $('d-ord'); d.dataset.id = id;
+  const steps = ['placed', 'accepted', 'preparing', 'ready', 'picked_up', 'delivered'], idx = steps.indexOf(o.status), dead = idx < 0;
+  const rv = o.status === 'delivered' ? (await db.from('reviews').select('rating').eq('order_id', id).maybeSingle()).data : null;
+  let rate = 0;
+  const stars = h('div', { class: 'stars' }, [1, 2, 3, 4, 5].map(n => h('button', { type: 'button', 'aria-label': n + ' stars', onclick: () => { rate = n; [...stars.children].forEach((b, i) => b.classList.toggle('on', i < n)); } }, '★')));
+  $('ord-body').replaceChildren(
+    h('h2', {}, o.shops?.name || 'Order'), h('p', { class: 'mute' }, '#' + o.id.slice(0, 6) + ', ' + (o.payment_method === 'cod' ? 'Cash on delivery' : 'Paid online')),
+    dead ? h('p', { class: 'badge' }, LABEL[o.status]) : h('ul', { class: 'tl' }, steps.map((s, i) => h('li', { class: i < idx ? 'done' : i === idx ? 'done now' : '' },
+      s === 'ready' && i === idx ? (o.partner_id ? 'Rider assigned, heading to the shop' : 'Ready, finding a rider') : LABEL[s]))),
+    o.order_items.map(i => h('div', { class: 'tot' }, h('span', {}, i.qty + '× ' + i.name), h('span', {}, money(i.price * i.qty)))),
+    h('div', { class: 'tot' }, h('span', {}, 'Delivery'), h('span', {}, money(o.delivery_fee))),
+    h('div', { class: 'tot g' }, h('span', {}, 'Total'), h('span', {}, money(o.total))),
+    h('p', { class: 'mute' }, 'Deliver to: ' + o.delivery_address),
+    o.status === 'placed' && h('button', { class: 'd', onclick: async () => { if (!confirm('Cancel this order?')) return; const { error } = await db.rpc('update_order_status', { p_order_id: id, p_new_status: 'cancelled' }); if (error) toast(error.message); else loadOrders(); } }, 'Cancel order'),
+    !['placed', 'cancelled', 'rejected', 'delivered'].includes(o.status) && h('p', { class: 'mute' }, 'The shop has already started on this order, so it can no longer be cancelled here. Please contact the shop.'),
+    o.status === 'delivered' && (rv ? h('p', {}, 'You rated this order ' + '★'.repeat(rv.rating)) : h('div', {}, h('h3', {}, 'How was it?'), stars, h('textarea', { id: 'rv-c', rows: 2, placeholder: 'Add a comment (optional)' }),
+      h('p', {}, h('button', { class: 'p', onclick: async () => { if (!rate) return toast('Pick a star rating first.'); const { error } = await db.from('reviews').insert({ order_id: id, customer_id: me.id, shop_id: o.shop_id, rating: rate, comment: $('rv-c').value.trim() || null }); if (error) toast(error.message); else { toast('Thanks for the review'); showOrder(id); } } }, 'Submit review')))),
+    h('p', {}, h('button', { onclick: () => { d.dataset.id = ''; d.close(); } }, 'Close')));
+  if (!d.open) d.showModal();
+}
+
+// ---------- start ----------
+(async () => { const { data: { session } } = await db.auth.getSession(); session ? boot(session.user) : show('v-auth'); })();
+</script>
+</body>
+</html>
